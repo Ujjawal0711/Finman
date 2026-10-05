@@ -22,7 +22,7 @@ cd backend && npm run dev
 cd frontend && npm install && npm run dev
 ```
 
-The frontend opens on http://localhost:5173 and proxies `/api` to the backend on port 4000. If another dev server already uses 5173, Vite will not start (strict port is not set, so it picks the next free one). Update `CORS_ORIGIN` in `backend/.env` to match, or leave the proxy to handle it.
+The frontend opens on http://localhost:5173 and proxies `/api` to the backend on port 4000. If another dev server already holds 5173, Vite moves to the next free port. That still works, because the proxy means the browser never calls the backend directly.
 
 ## Commands
 
