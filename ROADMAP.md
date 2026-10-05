@@ -1,4 +1,4 @@
-# FinMan build roadmap
+﻿# FinMan build roadmap
 
 Source: `FinMan-SystArch.docx`. Machine checked on 2026-10-05: Node 24.18, npm 11.16, Git 2.55 and VS Code 1.126 are installed. `mongosh` is not, and you don't need it (Atlas has a web shell and Compass bundles one).
 
@@ -34,16 +34,16 @@ Total: about 35 to 45 hours for one person.
 
 The architecture doc leaves these open. The rest of this roadmap assumes the answers below. If you disagree with one, change it here first, because later phases depend on it.
 
-- [ ] Single user, no login, no `userId` field. State this in the report as a scope limit.
-- [ ] One timestamp field, `occurredAt` (a BSON Date), replaces the separate `date` and `time` strings. The UI still shows separate date and time inputs. MongoDB can only range-query and group by day on a real Date.
-- [ ] Every "day" is an IST day. Aggregations pass `timezone: "Asia/Kolkata"`, so a spend at 00:30 lands on the correct date.
-- [ ] Add `direction: "debit" | "credit"`. Bank SMS include salary credits and refunds; charts sum debits only.
-- [ ] Type-specific fields go in a `details` sub-document whose shape depends on the payment method (UPI, card, bill). This is your schema-flexibility argument in the NoSQL report.
-- [ ] Categories live in a `categories` collection (name, color) seeded with defaults. Each transaction stores the category name as a plain string (denormalized). The analytics pipeline uses `$lookup` to attach colors.
-- [ ] "MetaData" means the per-transaction `details`, `rawInput`, `aiParsed`, `source` and the Mongoose timestamps. If your instructor expects a separate collection, add a `settings` singleton (currency, monthly budget) in phase 14.
-- [ ] Amounts are rupees stored as a Number, rounded to 2 decimals on input.
-- [ ] Endpoints added beyond the doc: `GET /api/health`, `GET /api/categories`, `GET /api/export/csv`, `POST /api/parse/file`. "Today's Spending" reuses `/api/analytics/categories` with today's date range and needs no endpoint of its own.
-- [ ] AI output is a suggestion. The user confirms every field on the review screen, and the app must still work when the AI is down (manual entry plus a regex fallback for the amount).
+- [x] Single user, no login, no `userId` field. State this in the report as a scope limit.
+- [x] One timestamp field, `occurredAt` (a BSON Date), replaces the separate `date` and `time` strings. The UI still shows separate date and time inputs. MongoDB can only range-query and group by day on a real Date.
+- [x] Every "day" is an IST day. Aggregations pass `timezone: "Asia/Kolkata"`, so a spend at 00:30 lands on the correct date.
+- [x] Add `direction: "debit" | "credit"`. Bank SMS include salary credits and refunds; charts sum debits only.
+- [x] Type-specific fields go in a `details` sub-document whose shape depends on the payment method (UPI, card, bill). This is your schema-flexibility argument in the NoSQL report.
+- [x] Categories live in a `categories` collection (name, color) seeded with defaults. Each transaction stores the category name as a plain string (denormalized). The analytics pipeline uses `$lookup` to attach colors.
+- [x] "MetaData" means the per-transaction `details`, `rawInput`, `aiParsed`, `source` and the Mongoose timestamps. If your instructor expects a separate collection, add a `settings` singleton (currency, monthly budget) in phase 14.
+- [x] Amounts are rupees stored as a Number, rounded to 2 decimals on input.
+- [x] Endpoints added beyond the doc: `GET /api/health`, `GET /api/categories`, `GET /api/export/csv`, `POST /api/parse/file`. "Today's Spending" reuses `/api/analytics/categories` with today's date range and needs no endpoint of its own.
+- [x] AI output is a suggestion. The user confirms every field on the review screen, and the app must still work when the AI is down (manual entry plus a regex fallback for the amount).
 
 Done when: you have accepted or edited every line above.
 
@@ -89,12 +89,12 @@ Target layout:
 
 ```
 finman/
-├─ backend/
-├─ frontend/          created by Vite in phase 8
-├─ samples/           fake SMS and bills for testing
-├─ api.http           REST Client requests
-├─ .gitignore
-└─ README.md
+â”œâ”€ backend/
+â”œâ”€ frontend/          created by Vite in phase 8
+â”œâ”€ samples/           fake SMS and bills for testing
+â”œâ”€ api.http           REST Client requests
+â”œâ”€ .gitignore
+â””â”€ README.md
 ```
 
 From `D:\Study\Sem 5\NoSQL Database\Project`:
@@ -177,37 +177,37 @@ With `NodeNext`, relative imports must end in `.js` even though the file on disk
 
 ```
 backend/src/
-├─ server.ts                 start-up: connect DB, then listen
-├─ app.ts                    express app, middleware, routes
-├─ config/
-│  ├─ env.ts                 load and validate env vars
-│  └─ db.ts                  mongoose.connect
-├─ models/
-│  ├─ Transaction.ts
-│  └─ Category.ts
-├─ routes/
-│  ├─ entries.ts
-│  ├─ parser.ts
-│  ├─ analytics.ts
-│  ├─ categories.ts          tiny, handler inline
-│  └─ export.ts
-├─ controllers/
-│  ├─ entryController.ts
-│  ├─ parserController.ts
-│  ├─ analyticsController.ts
-│  └─ exportController.ts
-├─ services/
-│  ├─ aiParser.ts            prompt, HF call, JSON repair, fallback
-│  ├─ analytics.ts           aggregation pipelines, IST day helpers
-│  └─ csv.ts
-├─ validation/
-│  └─ transaction.ts         zod schemas for request bodies and queries
-├─ middleware/
-│  └─ errorHandler.ts
-├─ scripts/
-│  └─ seed.ts
-└─ tests/
-   └─ core.test.ts
+â”œâ”€ server.ts                 start-up: connect DB, then listen
+â”œâ”€ app.ts                    express app, middleware, routes
+â”œâ”€ config/
+â”‚  â”œâ”€ env.ts                 load and validate env vars
+â”‚  â””â”€ db.ts                  mongoose.connect
+â”œâ”€ models/
+â”‚  â”œâ”€ Transaction.ts
+â”‚  â””â”€ Category.ts
+â”œâ”€ routes/
+â”‚  â”œâ”€ entries.ts
+â”‚  â”œâ”€ parser.ts
+â”‚  â”œâ”€ analytics.ts
+â”‚  â”œâ”€ categories.ts          tiny, handler inline
+â”‚  â””â”€ export.ts
+â”œâ”€ controllers/
+â”‚  â”œâ”€ entryController.ts
+â”‚  â”œâ”€ parserController.ts
+â”‚  â”œâ”€ analyticsController.ts
+â”‚  â””â”€ exportController.ts
+â”œâ”€ services/
+â”‚  â”œâ”€ aiParser.ts            prompt, HF call, JSON repair, fallback
+â”‚  â”œâ”€ analytics.ts           aggregation pipelines, IST day helpers
+â”‚  â””â”€ csv.ts
+â”œâ”€ validation/
+â”‚  â””â”€ transaction.ts         zod schemas for request bodies and queries
+â”œâ”€ middleware/
+â”‚  â””â”€ errorHandler.ts
+â”œâ”€ scripts/
+â”‚  â””â”€ seed.ts
+â””â”€ tests/
+   â””â”€ core.test.ts
 ```
 
 This keeps the doc's controllers / models / routes / services split and adds config, validation and middleware.
@@ -763,7 +763,7 @@ After parsing, set `category` to `null` if it isn't in the category list, and ro
 
 ```ts
 export function regexFallback(input: string) {
-  const m = input.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/i);
+  const m = input.match(/(?:rs\.?|inr|â‚¹)\s*([\d,]+(?:\.\d{1,2})?)/i);
   const direction = /credited|received|refund/i.test(input) ? 'credit' : /debited|spent|paid|withdrawn/i.test(input) ? 'debit' : null;
   return { amount: m ? Number(m[1].replace(/,/g, '')) : null, direction };
 }
@@ -902,9 +902,9 @@ export const csvRow = (cells: unknown[]) => cells.map(csvCell).join(',');
 - Both routes accept optional `from`/`to`, load `Transaction.find(filter).sort({ occurredAt: -1 }).select('-__v -dedupeHash').lean()`, and set the download name with ``res.attachment(`finman-${todayIst()}.json`)`` (or `.csv`).
 - JSON: `res.json(docs)`.
 - CSV columns: `Date (IST)`, `Amount`, `Type`, `Merchant`, `Category`, `Payment method`, `Description`, `Source`, `AI parsed`, `Details`. Format the date with `new Intl.DateTimeFormat('en-GB', { timeZone: TZ, dateStyle: 'medium', timeStyle: 'short' })` before passing it to `csvCell`, so Date objects don't get JSON-stringified. Pass `details` as is; `csvCell` turns it into a JSON string.
-- Join rows with `\r\n`, prefix the whole file with `'\uFEFF'` (a byte-order mark, so Excel reads UTF-8 and shows ₹ correctly), then `res.type('text/csv').send(csv)`.
+- Join rows with `\r\n`, prefix the whole file with `'\uFEFF'` (a byte-order mark, so Excel reads UTF-8 and shows â‚¹ correctly), then `res.type('text/csv').send(csv)`.
 
-Done when: `/daily` for a 30-day range returns 30 rows including zero days; the sum of the `/categories` totals equals the sum of the `/daily` totals for the same range (a mismatch means a timezone bug); the CSV opens in Excel with ₹ symbols and commas inside merchant names intact.
+Done when: `/daily` for a 30-day range returns 30 rows including zero days; the sum of the `/categories` totals equals the sum of the `/daily` totals for the same range (a mismatch means a timezone bug); the CSV opens in Excel with â‚¹ symbols and commas inside merchant names intact.
 
 ---
 
@@ -941,26 +941,26 @@ With the proxy, the browser only talks to port 5173, so you hit no CORS errors i
 
 ```
 frontend/src/
-├─ main.tsx
-├─ App.tsx                  nav + routes
-├─ api.ts                   typed fetch wrappers
-├─ types.ts                 Transaction, Category, ParseResult, etc. (mirror the backend)
-├─ format.ts                currency and date helpers
-├─ index.css
-├─ pages/
-│  ├─ Dashboard.tsx
-│  ├─ AddEntry.tsx
-│  ├─ History.tsx
-│  └─ EditEntry.tsx
-└─ components/
-   ├─ EntryForm.tsx          shared by AddEntry (review step) and EditEntry
-   ├─ ParseInput.tsx         textarea, file picker, Parse button
-   ├─ TransactionTable.tsx
-   ├─ ExportButtons.tsx
-   └─ charts/
-      ├─ TodayChart.tsx
-      ├─ SpendingOverTimeChart.tsx
-      └─ CategoryPieChart.tsx
+â”œâ”€ main.tsx
+â”œâ”€ App.tsx                  nav + routes
+â”œâ”€ api.ts                   typed fetch wrappers
+â”œâ”€ types.ts                 Transaction, Category, ParseResult, etc. (mirror the backend)
+â”œâ”€ format.ts                currency and date helpers
+â”œâ”€ index.css
+â”œâ”€ pages/
+â”‚  â”œâ”€ Dashboard.tsx
+â”‚  â”œâ”€ AddEntry.tsx
+â”‚  â”œâ”€ History.tsx
+â”‚  â””â”€ EditEntry.tsx
+â””â”€ components/
+   â”œâ”€ EntryForm.tsx          shared by AddEntry (review step) and EditEntry
+   â”œâ”€ ParseInput.tsx         textarea, file picker, Parse button
+   â”œâ”€ TransactionTable.tsx
+   â”œâ”€ ExportButtons.tsx
+   â””â”€ charts/
+      â”œâ”€ TodayChart.tsx
+      â”œâ”€ SpendingOverTimeChart.tsx
+      â””â”€ CategoryPieChart.tsx
 ```
 
 ### Routes (App.tsx)
@@ -1021,7 +1021,7 @@ Don't set `Content-Type` for `FormData`; the browser adds it with the multipart 
 ### format.ts
 
 ```ts
-export const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });   // inr.format(1250) -> "₹1,250.00"
+export const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });   // inr.format(1250) -> "â‚¹1,250.00"
 
 const ymd = (d: Date) => d.toLocaleDateString('en-CA');                                       // local YYYY-MM-DD
 export const todayStr = () => ymd(new Date());
@@ -1097,7 +1097,7 @@ Props: `initial`, `aiFilled?: Set<string>`, `missing?: Set<string>`, `categories
 
 Build the payload: `occurredAt: fromInputs(date, time)`, `aiParsed: aiFilled.size > 0`, plus `rawInput`, `source` and `details` from the parse result. Then call `api.create`.
 
-- 201: show "Saved ₹850.00 at Swiggy" with links "Add another" and "View history", and reset the form.
+- 201: show "Saved â‚¹850.00 at Swiggy" with links "Add another" and "View history", and reset the form.
 - 409: show "You already saved this message" with a link to History.
 - 400: show the server message above the form and keep the values.
 
@@ -1113,7 +1113,7 @@ Done when: each of the 7 samples goes through paste, parse, fix and save; pastin
 - Debounce the search box by 300 ms with a `setTimeout` inside a `useEffect` that clears it in the cleanup function. No library needed.
 - Keep filters and page in the URL with `useSearchParams`, so refresh and the back button keep the view.
 - Columns: Date (`showDate`, e.g. "05 Oct 2026, 08:41 pm"), Merchant, Category (colored dot plus name), Method, Amount, AI badge when `aiParsed`, then Edit and Delete buttons.
-- Amounts: right-aligned with tabular digits. Debits in red as "−₹429.00", credits in green as "+₹45,000.00".
+- Amounts: right-aligned with tabular digits. Debits in red as "âˆ’â‚¹429.00", credits in green as "+â‚¹45,000.00".
 - Footer: "Showing 21 to 40 of 63" with Prev and Next buttons, disabled at the ends.
 - While a new page loads, keep the old rows on screen at reduced opacity so the table doesn't jump.
 - Empty states: with no data at all, "No transactions yet" plus a link to Add entry. With filters that match nothing, "Nothing matches these filters" plus a "Clear filters" button.
@@ -1122,7 +1122,7 @@ Done when: each of the 7 samples goes through paste, parse, fix and save; pastin
 
 ### Delete
 
-`window.confirm('Delete ₹429.00 at Swiggy on 05 Oct?')`, then `api.remove(id)`, then refetch the current page. If that page is now empty and isn't page 1, step back one page.
+`window.confirm('Delete â‚¹429.00 at Swiggy on 05 Oct?')`, then `api.remove(id)`, then refetch the current page. If that page is now empty and isn't page 1, step back one page.
 
 ### EditEntry page
 
@@ -1157,7 +1157,7 @@ Refetch only the daily data when the range toggle changes, and only the donut da
 ### Recharts details
 
 - `ResponsiveContainer` takes its size from its parent. Give the wrapper a fixed height (`style={{ height: 300 }}`), otherwise the chart renders at 0 px and shows nothing.
-- Spending over time: `BarChart` with data `[{ day, total }]`; `XAxis dataKey="day"` with a `tickFormatter` that turns `2026-10-05` into "5 Oct"; `YAxis` with `tickFormatter={(v) => '₹' + v.toLocaleString('en-IN')}`; `Tooltip` with `formatter={(v) => inr.format(Number(v))}`. For 90 days add `interval="preserveStartEnd"` on the X axis so labels don't overlap.
+- Spending over time: `BarChart` with data `[{ day, total }]`; `XAxis dataKey="day"` with a `tickFormatter` that turns `2026-10-05` into "5 Oct"; `YAxis` with `tickFormatter={(v) => 'â‚¹' + v.toLocaleString('en-IN')}`; `Tooltip` with `formatter={(v) => inr.format(Number(v))}`. For 90 days add `interval="preserveStartEnd"` on the X axis so labels don't overlap.
 - Today: `BarChart layout="vertical"` with category names on the Y axis (long names read better that way), one `<Cell fill={color}>` per bar.
 - Donut: `<Pie dataKey="total" nameKey="category" innerRadius={60} outerRadius={100}>` with a `Cell` per slice using the category color, plus `Legend` and `Tooltip`. Put the month total in the hole with an absolutely positioned element over the chart.
 - Month picker for the donut: `<input type="month">`; derive the first and last day of that month.
@@ -1305,7 +1305,7 @@ Run `npm test` from `backend/`. The imports load `env.ts`, so `.env` must exist.
 | Delete | Confirm dialog; row gone; last item on a page steps back |
 | Filters | Date range, category, search, paging, refresh keeps state |
 | Charts | Empty month, single entry, 90-day range |
-| Export | JSON parses; CSV opens in Excel with ₹ |
+| Export | JSON parses; CSV opens in Excel with â‚¹ |
 | Upload | Bill photo; oversized file; wrong type |
 | Phone width | Chrome DevTools device mode at 375 px: no horizontal scroll except the table |
 
@@ -1385,3 +1385,4 @@ Questions to prepare for:
 | Upload fails with no clear error | `Content-Type` set by hand on `FormData` | Let the browser set it |
 | `EADDRINUSE: address already in use :::4000` | An old server is still running | `netstat -ano \| findstr :4000`, then `taskkill /PID <pid> /F` |
 | `curl` flags rejected in PowerShell | `curl` is `Invoke-WebRequest` there | Use `curl.exe` or `api.http` |
+
