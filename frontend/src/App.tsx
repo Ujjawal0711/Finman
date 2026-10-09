@@ -18,9 +18,7 @@ export default function App() {
             <NavLink to="/" end><Icon name="dashboard" /><span>Dashboard</span></NavLink>
             <NavLink to="/history"><Icon name="receipt" /><span>Transactions</span></NavLink>
           </nav>
-          <NavLink to="/add" className="rail-cta"><Icon name="plus" size={16} /> New entry</NavLink>
-          <p className="rail-foot">Paste a bank SMS or snap a bill. FinMan reads it; you confirm it.</p>
-        </aside>
+          <NavLink to="/add" className="rail-cta"><Icon name="plus" size={16} /> New entry</NavLink>        </aside>
         <main className="main">
           <div className="container">
             <Routes>

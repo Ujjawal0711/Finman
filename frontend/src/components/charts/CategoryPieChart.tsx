@@ -16,7 +16,7 @@ export default function CategoryPieChart({ data }: { data: CategoryPoint[] }) {
               {data.map((d) => <Cell key={d.category} fill={d.color} />)}
             </Pie>
             <Tooltip formatter={(v) => inr.format(Number(v))}
-              contentStyle={{ borderRadius: 10, border: '1px solid #e1e5e1', fontSize: 13 }} />
+              contentStyle={{ borderRadius: 10, border: '1px solid #e9e1e0', fontSize: 13 }} />
           </PieChart>
         </ResponsiveContainer>
         <div className="donut-total">
