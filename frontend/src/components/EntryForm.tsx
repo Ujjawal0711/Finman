@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { PAYMENT_METHODS } from '../types';
 import type { Category, Direction, PaymentMethod } from '../types';
 import { todayStr } from '../format';
+import Icon from './Icon';
 
 export interface FormValues {
   amount: string;
@@ -61,7 +62,8 @@ export default function EntryForm({ initial, aiFilled, missing, categories, deta
     onSubmit(values);
   }
 
-  const badge = (k: string) => (aiFilled?.has(k) ? <span className="ai-badge" title="Filled by AI">AI</span> : null);
+  const badge = (k: string) =>
+    aiFilled?.has(k) ? <span className="chip ai-chip" title="Filled by AI"><Icon name="sparkles" />AI</span> : null;
   const cls = (k: keyof FormValues) =>
     `field${missing?.has(k) && !values[k] ? ' missing' : ''}${errors[k] ? ' invalid' : ''}`;
   const help = (k: keyof FormValues) =>
@@ -82,11 +84,11 @@ export default function EntryForm({ initial, aiFilled, missing, categories, deta
 
         <fieldset className="field">
           <legend>Type {badge('direction')}</legend>
-          <div className="radios">
+          <div className="dir-toggle">
             {(['debit', 'credit'] as const).map((d) => (
               <label key={d}>
-                <input type="radio" name="direction" value={d} checked={values.direction === d} onChange={() => set('direction', d)} />
-                {d === 'debit' ? 'Debit' : 'Credit'}
+                <input type="radio" name="direction" value={d} className={d} checked={values.direction === d} onChange={() => set('direction', d)} />
+                <Icon name={d === 'debit' ? 'out' : 'in'} size={15} />{d === 'debit' ? 'Money out' : 'Money in'}
               </label>
             ))}
           </div>
@@ -153,8 +155,8 @@ export default function EntryForm({ initial, aiFilled, missing, categories, deta
         )}
       </div>
 
-      <div className="actions" style={{ marginTop: 'var(--s5)' }}>
-        <button type="submit" className="primary" disabled={saving}>{saving ? 'Saving...' : submitLabel}</button>
+      <div className="form-foot">
+        <button type="submit" className="primary" disabled={saving}><Icon name="check" size={16} />{saving ? 'Saving…' : submitLabel}</button>
         <button type="button" onClick={onCancel} disabled={saving}>Cancel</button>
       </div>
     </form>

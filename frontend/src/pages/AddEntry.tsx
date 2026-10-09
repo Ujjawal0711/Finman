@@ -4,6 +4,9 @@ import { ApiError, api } from '../api';
 import EntryForm from '../components/EntryForm';
 import type { FormValues } from '../components/EntryForm';
 import ParseInput from '../components/ParseInput';
+import Amount from '../components/Amount';
+import Icon from '../components/Icon';
+import SampleMessages from '../components/SampleMessages';
 import { fromInputs, inr, todayStr } from '../format';
 import type { Category, ParseResult, Source, TransactionInput } from '../types';
 
@@ -107,39 +110,62 @@ export default function AddEntry() {
     <>
       {saved && (
         <div className="banner ok" role="status">
-          {saved}
-          <div className="actions"><Link to="/history">View history</Link></div>
+          <Icon name="check" size={18} />
+          <div>{saved}. <Link to="/history">See it in transactions</Link></div>
         </div>
       )}
       {duplicate && (
         <div className="banner error" role="alert">
-          You already saved this message. <Link to="/history">Open history</Link>
+          <div>You already saved this message. <Link to="/history">Open transactions</Link></div>
         </div>
       )}
     </>
   );
 
-  if (step === 'review' || step === 'saving') {
+  if (review && (step === 'review' || step === 'saving')) {
+    const amount = Number(review.values.amount);
     return (
       <>
-        <div className="page-head"><h1>Review entry</h1></div>
-        {banners}
-        {error && <div className="banner error" role="alert">{error}</div>}
-        {review!.warnings.length > 0 && (
-          <div className="banner warn" role="status"><ul>{review!.warnings.map((w) => <li key={w}>{w}</li>)}</ul></div>
-        )}
-        <div className="split">
-          <div className="card">
-            <EntryForm key={formKey} initial={review!.values} aiFilled={review!.aiFilled} missing={review!.missing}
-              categories={categories} details={review!.details} submitLabel="Save entry" saving={step === 'saving'}
-              onSubmit={save} onCancel={() => { setStep('input'); setDuplicate(false); setError(''); }} />
-          </div>
-          {review!.rawInput && (
-            <details className="raw-panel" open>
-              <summary>Original text</summary>
-              <pre>{review!.rawInput}</pre>
-            </details>
+        <div className="page-head">
+          <div><h1>Check and save</h1><p>Fix anything the AI got wrong, then save.</p></div>
+        </div>
+        <div className="stack">
+          <section className="statement review-head" aria-label="Parsed transaction">
+            <div>
+              <div className="statement-label"><span className="dot" />
+                {review.source === 'manual' ? 'Manual entry' : review.values.direction === 'credit' ? 'Money in' : 'Money out'}
+              </div>
+              {amount > 0 ? <Amount value={amount} className="big-amount" /> : <div className="big-amount" style={{ opacity: 0.4 }}>₹ —</div>}
+              <div className="meta">
+                <span>{review.values.merchant || 'Unknown merchant'}</span>
+                {review.values.category && <span className="chip">{review.values.category}</span>}
+                {review.values.paymentMethod && <span className="chip">{review.values.paymentMethod}</span>}
+              </div>
+            </div>
+            {review.aiFilled.size > 0 && (
+              <span className="chip signal"><Icon name="sparkles" size={13} />AI filled {review.aiFilled.size} fields</span>
+            )}
+          </section>
+
+          {banners}
+          {error && <div className="banner error" role="alert"><div>{error}</div></div>}
+          {review.warnings.length > 0 && (
+            <div className="banner warn" role="status"><ul>{review.warnings.map((w) => <li key={w}>{w}</li>)}</ul></div>
           )}
+
+          <div className="grid-main">
+            <section className="card">
+              <EntryForm key={formKey} initial={review.values} aiFilled={review.aiFilled} missing={review.missing}
+                categories={categories} details={review.details} submitLabel="Save entry" saving={step === 'saving'}
+                onSubmit={save} onCancel={() => { setStep('input'); setDuplicate(false); setError(''); }} />
+            </section>
+            {review.rawInput ? (
+              <details className="raw-panel" open>
+                <summary>Original message</summary>
+                <pre>{review.rawInput}</pre>
+              </details>
+            ) : <div />}
+          </div>
         </div>
       </>
     );
@@ -147,21 +173,30 @@ export default function AddEntry() {
 
   return (
     <>
-      <div className="page-head"><h1>Add entry</h1></div>
-      {banners}
-      {notTx && (
-        <div className="banner warn" role="status">
-          This looks like an OTP or promotion, not a transaction.
-          <div className="actions">
-            <button className="small" onClick={manual}>Enter manually</button>
-            <button className="small" onClick={() => setNotTx(false)}>Edit text</button>
-          </div>
+      <div className="page-head">
+        <div><h1>Add entry</h1><p>Paste a bank SMS or upload a bill. FinMan reads it and you confirm.</p></div>
+      </div>
+      <div className="grid-main">
+        <div className="stack">
+          {banners}
+          {notTx && (
+            <div className="banner warn" role="status">
+              <div>
+                This looks like an OTP or promotion, not a transaction.
+                <div className="actions">
+                  <button className="small" onClick={manual}>Enter manually</button>
+                  <button className="small" onClick={() => setNotTx(false)}>Edit text</button>
+                </div>
+              </div>
+            </div>
+          )}
+          <ParseInput text={text} setText={setText} busy={step === 'parsing'} error={error}
+            onParseText={() => run(() => api.parse(text, 'sms'))}
+            onParseFile={(blob, name) => run(() => api.parseFile(blob, name))}
+            onManual={manual} />
         </div>
-      )}
-      <ParseInput text={text} setText={setText} busy={step === 'parsing'} error={error}
-        onParseText={() => run(() => api.parse(text, 'sms'))}
-        onParseFile={(blob, name) => run(() => api.parseFile(blob, name))}
-        onManual={manual} />
+        <SampleMessages onPick={(t) => { setText(t); setNotTx(false); setSaved(''); document.getElementById('parse-text')?.focus(); }} />
+      </div>
     </>
   );
 }

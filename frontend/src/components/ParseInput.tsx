@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import Icon from './Icon';
 
-const SAMPLE = 'Rs.850.00 debited from A/c XX4521 on 23-08-26 to VPA swiggy@icici (UPI Ref No 523614789012)';
 const MAX_SIDE = 1600;
 
 // Phone photos run 3 to 6 MB; shrink before upload to save bandwidth and tokens.
@@ -31,7 +31,6 @@ export default function ParseInput({ text, setText, busy, error, onParseText, on
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState('');
   const [fileError, setFileError] = useState('');
-  const picker = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!file?.type.startsWith('image/')) { setPreview(''); return; }
@@ -51,43 +50,46 @@ export default function ParseInput({ text, setText, busy, error, onParseText, on
   }
 
   return (
-    <div className="card">
-      <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'text'} onClick={() => setTab('text')}>Paste SMS or text</button>
-        <button role="tab" aria-selected={tab === 'file'} onClick={() => setTab('file')}>Upload bill</button>
+    <section className="card composer">
+      <div className="card-head">
+        <div className="segmented" role="tablist" aria-label="Input type">
+          <button role="tab" aria-selected={tab === 'text'} onClick={() => setTab('text')}>Message</button>
+          <button role="tab" aria-selected={tab === 'file'} onClick={() => setTab('file')}>Bill photo</button>
+        </div>
+        <button className="link" onClick={onManual}>Enter manually</button>
       </div>
 
-      {error && <div className="banner error" role="alert">{error}</div>}
+      {error && <div className="banner error" role="alert" style={{ marginBottom: 'var(--s3)' }}><div>{error}</div></div>}
 
       {tab === 'text' ? (
         <>
-          <label htmlFor="parse-text" className="hint">Paste a bank SMS, UPI notification or order text.</label>
-          <textarea id="parse-text" rows={6} maxLength={5000} placeholder={SAMPLE} value={text}
+          <label htmlFor="parse-text" className="sr-only">Bank SMS, UPI notification or order text</label>
+          <textarea id="parse-text" rows={6} maxLength={5000}
+            placeholder="Paste a bank SMS, UPI alert or order confirmation…" value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && text.trim() && !busy) onParseText(); }} />
-          <div className="hint" style={{ textAlign: 'right' }}>{text.length} / 5000</div>
-          <div className="actions" style={{ marginTop: 'var(--s3)', alignItems: 'center' }}>
+          <div className="composer-foot">
+            <span className="hint num">{text.length} / 5000 · <span className="kbd">Ctrl</span> + <span className="kbd">Enter</span> to read</span>
             <button className="primary" onClick={onParseText} disabled={!text.trim() || busy} aria-busy={busy}>
-              {busy ? 'Parsing...' : 'Parse with AI'}
+              <Icon name="sparkles" size={16} />{busy ? 'Reading…' : 'Read with AI'}
             </button>
-            <button className="link" onClick={onManual}>Enter manually</button>
           </div>
         </>
       ) : (
         <>
-          {fileError && <div className="banner error" role="alert">{fileError}</div>}
-          <label htmlFor="bill-file" className="hint">A photo of a bill or receipt (JPG, PNG, WebP) or a .txt file.</label>
-          <input id="bill-file" ref={picker} type="file" accept="image/*,.txt" capture="environment"
+          {fileError && <div className="banner error" role="alert" style={{ marginBottom: 'var(--s3)' }}><div>{fileError}</div></div>}
+          <label htmlFor="bill-file" className="hint">A photo of a bill or receipt (JPG, PNG, WebP), or a .txt file. Up to 5 MB.</label>
+          <input id="bill-file" type="file" accept="image/*,.txt" capture="environment" style={{ marginTop: 'var(--s2)' }}
             onChange={(e) => { setFile(e.target.files?.[0] ?? null); setFileError(''); }} />
           {preview && <img className="thumb" src={preview} alt="Selected bill" />}
-          <div className="actions" style={{ marginTop: 'var(--s3)', alignItems: 'center' }}>
+          <div className="composer-foot">
+            <span className="hint">The photo is read once and never stored.</span>
             <button className="primary" onClick={parseFile} disabled={!file || busy} aria-busy={busy}>
-              {busy ? 'Parsing...' : 'Parse bill'}
+              <Icon name="sparkles" size={16} />{busy ? 'Reading…' : 'Read bill'}
             </button>
-            <button className="link" onClick={onManual}>Enter manually</button>
           </div>
         </>
       )}
-    </div>
+    </section>
   );
 }
