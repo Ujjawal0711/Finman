@@ -51,7 +51,7 @@ Vite serves on http://localhost:5173 (or the next free port) and proxies `/api` 
 
 ## Notes
 
-- Single account, no sign-up. The seed script creates or updates the login from `.env`.
+- No sign-up. The seed script creates or updates the logins from `.env`: the admin account, plus an optional demo account (`DEMO_EMAIL` / `DEMO_PASSWORD`, set to `demo@gmail.com` / `demo123` locally for the viva). The demo password is weak on purpose, so remove those two lines before any real use.
 - Every day is an IST day. Dates are stored in UTC and grouped with `timezone: "Asia/Kolkata"`.
 - Using Atlas: if the cluster has been idle it pauses, so resume it from the Atlas page. If your IP changes (new Wi-Fi, hotspot), add it under Network Access.
 - Renaming a category uses a multi-document transaction, which needs a replica set. Atlas and `npm run db:local` are both replica sets; a plain standalone `mongod` is not.

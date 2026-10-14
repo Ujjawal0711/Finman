@@ -59,12 +59,16 @@ if (i !== -1) {
   console.log(`Inserted ${n} demo transactions`);
 }
 
-await User.findOneAndUpdate(
-  { email: env.ADMIN_EMAIL.toLowerCase() },
-  { $set: { passwordHash: await hashPassword(env.ADMIN_PASSWORD) } },
-  { upsert: true },
-);
-console.log(`Login user ready: ${env.ADMIN_EMAIL}`);
+const logins = [{ email: env.ADMIN_EMAIL, password: env.ADMIN_PASSWORD }];
+if (env.DEMO_EMAIL && env.DEMO_PASSWORD) logins.push({ email: env.DEMO_EMAIL, password: env.DEMO_PASSWORD });
+for (const { email, password } of logins) {
+  await User.findOneAndUpdate(
+    { email: email.toLowerCase() },
+    { $set: { passwordHash: await hashPassword(password) } },
+    { upsert: true },
+  );
+  console.log(`Login user ready: ${email}`);
+}
 
 await Promise.all([Transaction.syncIndexes(), Category.syncIndexes(), User.syncIndexes(), ParseLog.syncIndexes()]);
 await mongoose.disconnect();
