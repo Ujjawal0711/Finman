@@ -24,6 +24,11 @@ app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
+// Port 4000 is only the API; point anyone who opens it in a browser to the right place.
+app.get('/', (_req, res) => {
+  res.json({ name: 'FinMan API', health: '/api/health', app: 'Open the web app (Vite) instead: http://localhost:5173' });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, db: mongoose.connection.readyState === 1 });
 });
