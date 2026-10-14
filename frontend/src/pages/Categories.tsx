@@ -20,7 +20,7 @@ function Row({ cat, onDone }: { cat: Category; onDone: (msg: string) => void }) 
         ...(color !== cat.color ? { color } : {}),
       });
       onDone(name.trim() !== cat.name
-        ? `Renamed “${cat.name}” to “${r.category.name}” and updated ${r.transactionsUpdated} transactions in one database transaction.`
+        ? `Renamed “${cat.name}” to “${r.category.name}” and updated ${r.transactionsUpdated} ${r.transactionsUpdated === 1 ? 'entry' : 'entries'} in one database transaction.`
         : `Updated the colour of “${cat.name}”.`);
     } catch (e) {
       setError((e as Error).message);

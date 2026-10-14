@@ -3,6 +3,16 @@
 ### Health
 GET {{api}}/health
 
+### Sign in first: REST Client keeps the session cookie for the requests below.
+# Use ADMIN_EMAIL / ADMIN_PASSWORD from backend/.env
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "email": "admin@finman.local", "password": "PASTE_ADMIN_PASSWORD" }
+
+### Who am I
+GET {{api}}/auth/me
+
 ### Categories
 GET {{api}}/categories
 
@@ -70,3 +80,21 @@ GET {{api}}/export/json
 
 ### Export CSV
 GET {{api}}/export/csv
+
+### Month summary ($facet)
+GET {{api}}/analytics/summary?from=2026-10-01&to=2026-10-31
+
+### AI parser stats (TTL collection)
+GET {{api}}/analytics/parser
+
+### Rename a category (multi-document transaction)
+PATCH {{api}}/categories/Rent
+Content-Type: application/json
+
+{ "name": "Housing" }
+
+### Rename it back
+PATCH {{api}}/categories/Housing
+Content-Type: application/json
+
+{ "name": "Rent" }
