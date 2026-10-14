@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import { api } from '../api';
+import type { ParserStat } from '../types';
 import Icon from './Icon';
 
 // Synthetic messages (fake accounts and references) for trying the parser.
@@ -10,6 +13,10 @@ const SAMPLES = [
 ];
 
 export default function SampleMessages({ onPick }: { onPick: (text: string) => void }) {
+  const [stats, setStats] = useState<ParserStat[]>([]);
+  useEffect(() => { api.parserStats().then(setStats).catch(() => {}); }, []);
+  const runs = stats.reduce((n, s) => n + s.runs, 0);
+  const ok = stats.reduce((n, s) => n + s.runs * s.successRate, 0);
   return (
     <aside className="card">
       <div className="card-head"><h2>Try a sample</h2><span className="sub">Synthetic data</span></div>
@@ -24,6 +31,12 @@ export default function SampleMessages({ onPick }: { onPick: (text: string) => v
         ))}
       </ul>
       <p className="side-note">The AI only suggests. Every field stays editable, and nothing is saved until you press Save.</p>
+      {runs > 0 && (
+        <p className="parser-stat">
+          Last 30 days: {runs} {runs === 1 ? 'read' : 'reads'}, {Math.round((ok / runs) * 100)}% by AI,
+          {' '}avg {(stats.reduce((n, s) => n + s.avgMs * s.runs, 0) / runs / 1000).toFixed(1)}s.
+        </p>
+      )}
     </aside>
   );
 }

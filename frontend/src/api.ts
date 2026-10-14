@@ -1,4 +1,4 @@
-import type { Category, DailyPoint, CategoryPoint, Page, ParseResult, Transaction, TransactionInput } from './types';
+import type { Category, DailyPoint, CategoryPoint, Page, ParseResult, ParserStat, Summary, Transaction, TransactionInput } from './types';
 
 export const BASE: string = import.meta.env.VITE_API_URL ?? '';
 
@@ -16,6 +16,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   try {
     res = await fetch(`${BASE}/api${path}`, {
       ...init,
+      credentials: 'include',
       headers: isForm ? undefined : { 'Content-Type': 'application/json' },
     });
   } catch {
@@ -23,12 +24,26 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => ({}));
+  // a 401 anywhere except the login call means the session ended; App listens and shows the sign-in screen
+  if (res.status === 401 && path !== '/auth/login') window.dispatchEvent(new Event('finman:signed-out'));
   if (!res.ok) throw new ApiError(body?.error?.message ?? `Request failed (${res.status})`, res.status);
   return body as T;
 }
 
 export const api = {
+  me: () => request<{ email: string }>('/auth/me'),
+  login: (email: string, password: string) =>
+    request<{ email: string }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  logout: () => request<void>('/auth/logout', { method: 'POST' }),
   categories: () => request<Category[]>('/categories'),
+  createCategory: (name: string, color: string) =>
+    request<Category>('/categories', { method: 'POST', body: JSON.stringify({ name, color }) }),
+  updateCategory: (name: string, changes: { name?: string; color?: string }) =>
+    request<{ category: Category; transactionsUpdated: number }>(`/categories/${encodeURIComponent(name)}`,
+      { method: 'PATCH', body: JSON.stringify(changes) }),
+  deleteCategory: (name: string) => request<void>(`/categories/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+  summary: (from: string, to: string) => request<Summary>(`/analytics/summary?from=${from}&to=${to}`),
+  parserStats: () => request<ParserStat[]>('/analytics/parser'),
   parse: (text: string, source: 'sms' | 'text') =>
     request<ParseResult>('/parse', { method: 'POST', body: JSON.stringify({ text, source }) }),
   parseFile: (file: Blob, name: string) => {

@@ -10,6 +10,9 @@ export const env = z.object({
   HF_MODEL: z.string(),
   HF_VISION_MODEL: z.string().optional(),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  ADMIN_EMAIL: z.string().email(),
+  ADMIN_PASSWORD: z.string().min(8),
 }).parse(process.env);
 
 export const TZ = 'Asia/Kolkata';

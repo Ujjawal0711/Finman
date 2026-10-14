@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { env } from '../config/env.js';
 import { Category } from '../models/Category.js';
+import { ParseLog } from '../models/ParseLog.js';
 import { DIRECTIONS, PAYMENT_METHODS } from '../models/Transaction.js';
 import { HttpError } from '../middleware/errorHandler.js';
 import { todayIst } from './analytics.js';
@@ -165,8 +166,10 @@ async function categoryNames() {
   return (await Category.find().lean()).map((c) => c.name);
 }
 
-function logParse(model: string, started: number, ok: boolean) {
-  console.log(`parse model=${model} ms=${Date.now() - started} ${ok ? 'ok' : 'fallback'}`);
+function logParse(model: string, kind: 'text' | 'image', started: number, ok: boolean) {
+  const ms = Date.now() - started;
+  console.log(`parse model=${model} ms=${ms} ${ok ? 'ok' : 'fallback'}`);
+  ParseLog.create({ model, kind, ok, ms }).catch((e) => console.error('parse log write failed', e));
 }
 
 export async function parseTransactionText(input: string) {
@@ -174,7 +177,7 @@ export async function parseTransactionText(input: string) {
   const warnings: string[] = [];
   const started = Date.now();
   const result = await runModel(buildMessages(input, categories, todayIst()), env.HF_MODEL, warnings);
-  logParse(env.HF_MODEL, started, result !== null);
+  logParse(env.HF_MODEL, 'text', started, result !== null);
   return toParseResult(input, result, regexFallback(input), categories, warnings);
 }
 
@@ -194,7 +197,7 @@ export async function parseBillImage(buffer: Buffer, mimetype: string, fileName:
     ] },
   ];
   const result = await runModel(messages, env.HF_VISION_MODEL, warnings);
-  logParse(env.HF_VISION_MODEL, started, result !== null);
+  logParse(env.HF_VISION_MODEL, 'image', started, result !== null);
   const out = toParseResult('', result, { amount: null, direction: null }, categories, warnings);
   if (out.fields) out.fields.details = { ...out.fields.details, fileName };
   return out;

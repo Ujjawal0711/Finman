@@ -7,9 +7,10 @@ import CategoryBars from '../components/charts/CategoryBars';
 import CategoryPieChart from '../components/charts/CategoryPieChart';
 import SpendingOverTimeChart from '../components/charts/SpendingOverTimeChart';
 import ExportButtons from '../components/ExportButtons';
+import MonthInsights from '../components/MonthInsights';
 import TransactionList from '../components/TransactionList';
 import { daysAgoStr, monthBounds, monthName, todayStr } from '../format';
-import type { Category, CategoryPoint, DailyPoint, Page, Transaction } from '../types';
+import type { Category, CategoryPoint, DailyPoint, Page, Summary, Transaction } from '../types';
 
 interface Slot<T> { data: T | null; error: string; loading: boolean }
 
@@ -49,6 +50,10 @@ export default function Dashboard() {
   const [months, retryMonth] = useSlot<CategoryPoint[]>(() => {
     const { from, to } = monthBounds(month);
     return api.byCategory(from, to);
+  }, [month]);
+  const [summary, retrySummary] = useSlot<Summary>(() => {
+    const { from, to } = monthBounds(month);
+    return api.summary(from, to);
   }, [month]);
   const [daily, retryDaily] = useSlot<DailyPoint[]>(() => api.daily(daysAgoStr(range - 1), todayStr()), [range]);
   const [recent, retryRecent] = useSlot<Page<Transaction>>(() => api.list({ limit: '6' }), []);
@@ -120,6 +125,13 @@ export default function Dashboard() {
             </SlotBody>
           </section>
         </div>
+
+        <section className="card">
+          <div className="card-head"><h2>{monthName(month)} at a glance</h2><span className="sub">Change the month above</span></div>
+          <SlotBody slot={summary} retry={retrySummary}>
+            {summary.data && <MonthInsights s={summary.data} />}
+          </SlotBody>
+        </section>
 
         <section className="card">
           <div className="card-head"><h2>Recent transactions</h2><Link to="/history">View all</Link></div>

@@ -1,7 +1,11 @@
 import mongoose from 'mongoose';
+import { env } from '../config/env.js';
 import { connectDb } from '../config/db.js';
 import { Category } from '../models/Category.js';
+import { ParseLog } from '../models/ParseLog.js';
 import { Transaction, PAYMENT_METHODS } from '../models/Transaction.js';
+import { User } from '../models/User.js';
+import { hashPassword } from '../services/auth.js';
 
 const DEFAULT_CATEGORIES = [
   { name: 'Food', color: '#f97316' },
@@ -55,5 +59,12 @@ if (i !== -1) {
   console.log(`Inserted ${n} demo transactions`);
 }
 
-await Transaction.syncIndexes();
+await User.findOneAndUpdate(
+  { email: env.ADMIN_EMAIL.toLowerCase() },
+  { $set: { passwordHash: await hashPassword(env.ADMIN_PASSWORD) } },
+  { upsert: true },
+);
+console.log(`Login user ready: ${env.ADMIN_EMAIL}`);
+
+await Promise.all([Transaction.syncIndexes(), Category.syncIndexes(), User.syncIndexes(), ParseLog.syncIndexes()]);
 await mongoose.disconnect();

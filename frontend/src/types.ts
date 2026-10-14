@@ -7,6 +7,7 @@ export interface Category {
   _id: string;
   name: string;
   color: string;
+  transactionCount?: number;
 }
 
 export interface TransactionInput {
@@ -70,3 +71,22 @@ export interface Page<T> {
   page: number;
   pages: number;
 }
+
+export interface Bucket { name: string; total: number; count: number }
+
+export interface Summary {
+  from: string;
+  to: string;
+  days: number;
+  spent: number;
+  received: number;
+  net: number;
+  count: number;
+  avgPerDay: number;
+  aiParsedShare: number;
+  byMethod: Bucket[];
+  topMerchants: Bucket[];
+  largest: { merchant: string; amount: number; category: string; occurredAt: string } | null;
+}
+
+export interface ParserStat { model: string; runs: number; successRate: number; avgMs: number }

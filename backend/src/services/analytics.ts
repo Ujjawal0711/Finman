@@ -1,4 +1,5 @@
 import { TZ } from '../config/env.js';
+import { ParseLog } from '../models/ParseLog.js';
 import { Transaction } from '../models/Transaction.js';
 
 // '2026-10-05' to '2026-10-05' becomes [04 Oct 18:30Z, 05 Oct 18:30Z): exactly one IST day
@@ -46,4 +47,62 @@ export function categoryBreakdown(from: string, to: string) {
     } },
     { $sort: { total: -1 } },
   ]);
+}
+
+interface Bucket { _id: string; total: number; count: number }
+interface SummaryFacets {
+  totals: Bucket[];
+  byMethod: Bucket[];
+  topMerchants: Bucket[];
+  largest: { merchant: string; amount: number; category: string; occurredAt: Date }[];
+  aiParsed: { count: number }[];
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+const bucket = (b: Bucket) => ({ name: b._id, total: round2(b.total), count: b.count });
+
+// $facet runs several pipelines over one $match, so the whole month summary costs one round trip.
+export async function periodSummary(from: string, to: string) {
+  const { start, end } = istDayRange(from, to);
+  const debit = { $match: { direction: 'debit' } };
+  const [f] = await Transaction.aggregate<SummaryFacets>([
+    { $match: { occurredAt: { $gte: start, $lt: end } } },
+    { $facet: {
+        totals: [{ $group: { _id: '$direction', total: { $sum: '$amount' }, count: { $sum: 1 } } }],
+        byMethod: [debit, { $group: { _id: '$paymentMethod', total: { $sum: '$amount' }, count: { $sum: 1 } } }, { $sort: { total: -1 } }],
+        topMerchants: [
+          debit, { $match: { merchant: { $ne: '' } } },
+          { $group: { _id: '$merchant', total: { $sum: '$amount' }, count: { $sum: 1 } } },
+          { $sort: { total: -1 } }, { $limit: 5 },
+        ],
+        largest: [debit, { $sort: { amount: -1 } }, { $limit: 1 }, { $project: { _id: 0, merchant: 1, amount: 1, category: 1, occurredAt: 1 } }],
+        aiParsed: [{ $match: { aiParsed: true } }, { $count: 'count' }],
+    } },
+  ]);
+
+  const spent = f.totals.find((t) => t._id === 'debit');
+  const received = f.totals.find((t) => t._id === 'credit');
+  const days = Math.round((end.getTime() - start.getTime()) / 86_400_000);
+  const count = f.totals.reduce((s, t) => s + t.count, 0);
+  return {
+    from, to, days,
+    spent: round2(spent?.total ?? 0),
+    received: round2(received?.total ?? 0),
+    net: round2((received?.total ?? 0) - (spent?.total ?? 0)),
+    count,
+    avgPerDay: round2((spent?.total ?? 0) / days),
+    aiParsedShare: count ? round2((f.aiParsed[0]?.count ?? 0) / count) : 0,
+    byMethod: f.byMethod.map(bucket),
+    topMerchants: f.topMerchants.map(bucket),
+    largest: f.largest[0] ?? null,
+  };
+}
+
+// Reads the TTL-managed parse log: only the last 30 days exist, by design.
+export async function parserStats() {
+  const rows = await ParseLog.aggregate<{ _id: string; runs: number; ok: number; avgMs: number }>([
+    { $group: { _id: '$model', runs: { $sum: 1 }, ok: { $sum: { $cond: ['$ok', 1, 0] } }, avgMs: { $avg: '$ms' } } },
+    { $sort: { runs: -1 } },
+  ]);
+  return rows.map((r) => ({ model: r._id, runs: r.runs, successRate: round2(r.ok / r.runs), avgMs: Math.round(r.avgMs) }));
 }

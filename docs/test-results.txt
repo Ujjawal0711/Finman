@@ -1,0 +1,63 @@
+MongoDB connected: finman_test
+▶ authentication
+  ✔ protected routes reject requests without a session (88.2351ms)
+  ✔ wrong password is rejected without revealing which part was wrong (192.9706ms)
+  ✔ login sets an httpOnly session cookie that unlocks the API (130.3855ms)
+  ✔ a tampered token is rejected (5.5035ms)
+✔ authentication (674.7781ms)
+▶ entries CRUD
+  ✔ create stores the entry, rounds the amount and returns 201 (27.0613ms)
+  ✔ read by id and list with filters, search and pagination (36.1704ms)
+(node:28488) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✔ update replaces the document and validates it (40.6858ms)
+  ✔ delete removes it; later reads are 404 (24.5896ms)
+  ✔ malformed ids are 400, unknown ids are 404 (22.9019ms)
+✔ entries CRUD (152.4456ms)
+▶ input validation
+  ✔ rejects negative amount (15.7021ms)
+  ✔ rejects zero amount (4.3734ms)
+  ✔ rejects future date (5.3094ms)
+  ✔ rejects unknown category (9.8064ms)
+  ✔ rejects bad payment method (6.2227ms)
+✔ input validation (42.3159ms)
+▶ duplicate detection (partial unique index)
+  ✔ the same message cannot be saved twice, even with different spacing or case (43.6323ms)
+  ✔ manual entries without raw text are never treated as duplicates (29.0368ms)
+✔ duplicate detection (partial unique index) (73.0612ms)
+▶ analytics aggregations
+  ✔ daily totals group by IST day, fill empty days and ignore credits (7.54ms)
+  ✔ category totals ($group + $lookup) add up to the daily totals (34.5395ms)
+  ✔ $facet summary returns totals, merchants and methods in one query (9.5179ms)
+  ✔ ranges over a year are refused (6.2037ms)
+  ✔ the analytics query is served by the compound index, not a collection scan (7.0221ms)
+✔ analytics aggregations (70.187ms)
+▶ category rename (multi-document transaction)
+  ✔ renaming updates the category and every transaction that copied its name (59.3379ms)
+  ✔ a rename that collides is rolled back: nothing changes in either collection (17.7543ms)
+  ✔ a category in use cannot be deleted; an unused one can (86.7047ms)
+✔ category rename (multi-document transaction) (164.3935ms)
+▶ AI parser
+  ✔ a good model reply fills the fields and writes a TTL-managed log row (37.8694ms)
+  ✔ a category the model invents is dropped instead of saved (10.5095ms)
+  ✔ garbage replies get one retry, then fall back to the regex amount (19.1156ms)
+  ✔ a rejected token is reported as a readable warning, not an error (8.6749ms)
+  ✔ OTP messages are recognised as not a transaction (9.9478ms)
+  ✔ parser stats read the log by model (8.4205ms)
+✔ AI parser (95.63ms)
+▶ export
+  ✔ CSV has a byte-order mark, the header row and formula escaping (37.3147ms)
+✔ export (37.5749ms)
+✔ extractJson handles code fences and trailing prose (1.9842ms)
+✔ aiResult keeps good fields when one is bad (2.6465ms)
+✔ csvCell escapes quotes, commas and formulas (0.3472ms)
+✔ istDayRange covers exactly one IST day (2.0178ms)
+✔ regexFallback finds amount and direction (0.4963ms)
+ℹ tests 36
+ℹ suites 8
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6362.8772
