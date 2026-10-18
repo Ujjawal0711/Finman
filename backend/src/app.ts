@@ -32,7 +32,9 @@ app.get('/', (_req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, db: mongoose.connection.readyState === 1 });
 });
-app.use('/api/auth/login', limit(15 * 60_000, 10, 'Too many sign-in attempts. Wait 15 minutes and try again'));
+const signInLimit = limit(15 * 60_000, 10, 'Too many sign-in attempts. Wait 15 minutes and try again');
+app.post('/api/auth/login', signInLimit);
+app.post('/api/auth/demo', limit(15 * 60_000, 30, 'Too many demo sign-ins. Wait 15 minutes and try again'));
 app.use('/api/auth', auth);
 
 // everything below needs a signed-in user

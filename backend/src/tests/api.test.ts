@@ -18,6 +18,8 @@ Object.assign(process.env, {
   JWT_SECRET: 'test-secret-that-is-at-least-32-characters-long',
   ADMIN_EMAIL: 'tester@finman.local',
   ADMIN_PASSWORD: 'test-password-123',
+  DEMO_EMAIL: 'demo@finman.test',
+  DEMO_PASSWORD: 'demo-pass',
 });
 
 const { default: mongoose } = await import('mongoose');
@@ -70,6 +72,7 @@ before(async () => {
     { name: 'Rent', color: '#64748b' }, { name: 'Transfers', color: '#6366f1' }, { name: 'Other', color: '#9ca3af' },
   ]);
   await User.create({ email: process.env.ADMIN_EMAIL, passwordHash: await hashPassword(process.env.ADMIN_PASSWORD!) });
+  await User.create({ email: process.env.DEMO_EMAIL, passwordHash: await hashPassword(process.env.DEMO_PASSWORD!) });
   server = app.listen(0);
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
@@ -99,6 +102,19 @@ describe('authentication', () => {
     assert.match(set, /HttpOnly/i);
     cookie = set.split(';')[0];
     assert.equal((await call('GET', '/auth/me')).body.email, process.env.ADMIN_EMAIL);
+  });
+
+  test('the login page can ask whether a demo account exists', async () => {
+    const r = await call('GET', '/auth/demo', undefined, false);
+    assert.deepEqual(r.body, { enabled: true, email: 'demo@finman.test' });
+  });
+
+  test('one-click demo sign-in works without sending a password', async () => {
+    const r = await call('POST', '/auth/demo', undefined, false);
+    assert.equal(r.status, 200);
+    const demoCookie = (r.headers.get('set-cookie') ?? '').split(';')[0];
+    const me = await realFetch(`${base}/api/auth/me`, { headers: { Cookie: demoCookie } });
+    assert.equal((await me.json()).email, 'demo@finman.test');
   });
 
   test('a tampered token is rejected', async () => {

@@ -337,6 +337,11 @@ details summary { cursor: pointer; font-weight: 600; font-size: 0.875rem; }
 .login-card { width: min(100%, 400px); display: flex; flex-direction: column; gap: var(--s4); padding: var(--s6); }
 .login-card h1 { font-size: 1.5rem; }
 .login-card .primary { height: 2.75rem; margin-top: var(--s2); }
+.login-or { display: flex; align-items: center; gap: var(--s3); color: var(--ink-3); font-size: 0.8125rem; }
+.login-or::before, .login-or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.demo-btn { height: 2.75rem; background: var(--signal); border-color: var(--signal); color: var(--signal-ink); }
+.demo-btn:hover:not(:disabled) { background: var(--signal-hover); border-color: var(--signal-hover); }
+.login-demo-note { text-align: center; margin-top: calc(-1 * var(--s2)); }
 .rail-user { margin-top: auto; display: flex; align-items: center; gap: var(--s2); padding: var(--s3) var(--s2) 0; border-top: 1px solid var(--rail-2); font-size: 0.8125rem; }
 .rail-user span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rail-user button { background: transparent; border-color: transparent; color: var(--rail-ink); }

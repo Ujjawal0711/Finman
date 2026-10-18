@@ -25,7 +25,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => ({}));
   // a 401 anywhere except the login call means the session ended; App listens and shows the sign-in screen
-  if (res.status === 401 && path !== '/auth/login') window.dispatchEvent(new Event('finman:signed-out'));
+  if (res.status === 401 && !path.startsWith('/auth/')) window.dispatchEvent(new Event('finman:signed-out'));
   if (!res.ok) throw new ApiError(body?.error?.message ?? `Request failed (${res.status})`, res.status);
   return body as T;
 }
@@ -35,6 +35,8 @@ export const api = {
   login: (email: string, password: string) =>
     request<{ email: string }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => request<void>('/auth/logout', { method: 'POST' }),
+  demoInfo: () => request<{ enabled: boolean; email: string | null }>('/auth/demo'),
+  demoLogin: () => request<{ email: string }>('/auth/demo', { method: 'POST' }),
   categories: () => request<Category[]>('/categories'),
   createCategory: (name: string, color: string) =>
     request<Category>('/categories', { method: 'POST', body: JSON.stringify({ name, color }) }),

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { api } from '../api';
 import Icon from '../components/Icon';
@@ -7,20 +7,29 @@ export default function Login({ onSignedIn }: { onSignedIn: (email: string) => v
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<'' | 'form' | 'demo'>('');
+  const [demoEmail, setDemoEmail] = useState<string | null>(null);
 
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    setBusy(true);
+  // The demo button appears only when the server has a demo account configured.
+  useEffect(() => {
+    api.demoInfo().then((d) => setDemoEmail(d.enabled ? d.email : null)).catch(() => {});
+  }, []);
+
+  async function signIn(kind: 'form' | 'demo', call: () => Promise<{ email: string }>) {
+    setBusy(kind);
     setError('');
     try {
-      const me = await api.login(email, password);
-      onSignedIn(me.email);
+      onSignedIn((await call()).email);
     } catch (err) {
       setError((err as Error).message);
-      setBusy(false);
+      setBusy('');
     }
   }
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    signIn('form', () => api.login(email, password));
+  };
 
   return (
     <div className="login">
@@ -40,7 +49,18 @@ export default function Login({ onSignedIn }: { onSignedIn: (email: string) => v
           <label htmlFor="l-pass">Password</label>
           <input id="l-pass" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
-        <button type="submit" className="primary" disabled={busy}><Icon name="lock" size={16} />{busy ? 'Signing in…' : 'Sign in'}</button>
+        <button type="submit" className="primary" disabled={busy !== ''}>
+          <Icon name="lock" size={16} />{busy === 'form' ? 'Signing in…' : 'Sign in'}
+        </button>
+        {demoEmail && (
+          <>
+            <div className="login-or" aria-hidden="true"><span>or</span></div>
+            <button type="button" className="demo-btn" disabled={busy !== ''} onClick={() => signIn('demo', api.demoLogin)}>
+              <Icon name="sparkles" size={16} />{busy === 'demo' ? 'Opening demo…' : 'Try the demo account'}
+            </button>
+            <p className="hint login-demo-note">No password needed. Signs in as {demoEmail} with sample data.</p>
+          </>
+        )}
       </form>
     </div>
   );
