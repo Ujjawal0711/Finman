@@ -56,22 +56,23 @@ function buildMessages(input: string, categories: string[], today: string): Mess
   ];
 }
 
-const HF_URL = 'https://router.huggingface.co/v1/chat/completions';
-const HF_ERRORS: Record<number, string> = {
-  400: 'The AI model in HF_MODEL is not available on Hugging Face. Pick another model in backend/.env',
-  401: 'Hugging Face rejected the token',
-  402: 'Hugging Face credits are used up',
-  429: 'Hugging Face rate limit hit, try again in a minute',
+const AI_ERRORS: Record<number, string> = {
+  400: 'The AI model set in backend/.env is not available from this provider',
+  401: 'The AI provider rejected the API key',
+  402: 'The AI provider credits are used up',
+  404: 'The AI model set in backend/.env does not exist at this provider',
+  413: 'That input is too large for the AI model',
+  429: 'AI rate limit hit, try again in a minute',
 };
 
-async function callHf(messages: unknown[], model: string): Promise<string> {
-  const res = await fetch(HF_URL, {
+async function callAi(messages: unknown[], model: string): Promise<string> {
+  const res = await fetch(`${env.AI_BASE_URL}/chat/completions`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${env.HF_TOKEN}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${env.AI_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, messages, temperature: 0, max_tokens: 500 }),
     signal: AbortSignal.timeout(30_000),
   });
-  if (!res.ok) throw new HttpError(502, HF_ERRORS[res.status] ?? `Hugging Face error ${res.status}`);
+  if (!res.ok) throw new HttpError(502, AI_ERRORS[res.status] ?? `AI provider error ${res.status}`);
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return data.choices?.[0]?.message?.content ?? '';
 }
@@ -145,12 +146,12 @@ function toParseResult(
 
 async function runModel(messages: Message[], model: string, warnings: string[]): Promise<AiResult | null> {
   try {
-    let reply = await callHf(messages, model);
+    let reply = await callAi(messages, model);
     try {
       return aiResult.parse(extractJson(reply));
     } catch {
       // one retry: show the model its own reply and ask again
-      reply = await callHf(
+      reply = await callAi(
         [...messages, { role: 'assistant', content: reply }, { role: 'user', content: 'That was not valid JSON. Reply with only the JSON object.' }],
         model,
       );
@@ -177,13 +178,13 @@ export async function parseTransactionText(input: string) {
   const categories = await categoryNames();
   const warnings: string[] = [];
   const started = Date.now();
-  const result = await runModel(buildMessages(input, categories, todayIst()), env.HF_MODEL, warnings);
-  logParse(env.HF_MODEL, 'text', started, result !== null);
+  const result = await runModel(buildMessages(input, categories, todayIst()), env.AI_MODEL, warnings);
+  logParse(env.AI_MODEL, 'text', started, result !== null);
   return toParseResult(input, result, regexFallback(input), categories, warnings);
 }
 
 export async function parseBillImage(buffer: Buffer, mimetype: string, fileName: string) {
-  if (!env.HF_VISION_MODEL) {
+  if (!env.AI_VISION_MODEL) {
     throw new HttpError(400, "Bill photos aren't configured; paste the bill text instead");
   }
   const categories = await categoryNames();
@@ -197,8 +198,8 @@ export async function parseBillImage(buffer: Buffer, mimetype: string, fileName:
       { type: 'image_url', image_url: { url: dataUrl } },
     ] },
   ];
-  const result = await runModel(messages, env.HF_VISION_MODEL, warnings);
-  logParse(env.HF_VISION_MODEL, 'image', started, result !== null);
+  const result = await runModel(messages, env.AI_VISION_MODEL, warnings);
+  logParse(env.AI_VISION_MODEL, 'image', started, result !== null);
   const out = toParseResult('', result, { amount: null, direction: null }, categories, warnings);
   if (out.fields) out.fields.details = { ...out.fields.details, fileName };
   return out;

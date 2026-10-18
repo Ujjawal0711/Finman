@@ -1,12 +1,12 @@
 # FinMan
 
-A personal finance tracker for a NoSQL Database course project. Paste a bank SMS or upload a bill photo, a Hugging Face model pulls out the transaction, you check the fields, and the dashboard charts your spending. Built on MongoDB, Express 5, React 19 and TypeScript.
+A personal finance tracker for a NoSQL Database course project. Paste a bank SMS or upload a bill photo, an AI model (Groq by default) pulls out the transaction, you check the fields, and the dashboard charts your spending. Built on MongoDB, Express 5, React 19 and TypeScript.
 
 The full write-up is in [docs/FinMan-Project-Report.docx](docs/FinMan-Project-Report.docx). The build plan is in [ROADMAP.md](ROADMAP.md).
 
 ## Setup
 
-You need Node 24. For the database, use either a MongoDB Atlas cluster or the local one that `npm run db:local` starts. The AI parser needs a Hugging Face token with Inference Providers access; without one, entry still works through the regex fallback.
+You need Node 24. For the database, use either a MongoDB Atlas cluster or the local one that `npm run db:local` starts. The AI parser needs an API key for any OpenAI-compatible provider. Groq is the default: create a free key at https://console.groq.com/keys and put it in `AI_API_KEY`. Without a working key, entry still works through the regex fallback.
 
 1. Copy `backend/.env.example` to `backend/.env` and fill it in. `JWT_SECRET` needs at least 32 random characters. `ADMIN_EMAIL` and `ADMIN_PASSWORD` become your login.
 2. Start a database, then seed it:
@@ -42,7 +42,7 @@ Vite serves on http://localhost:5173 (or the next free port) and proxies `/api` 
 | backend | `npm run db:local` | One-node MongoDB replica set on port 27017, data kept in `backend/.localdb` |
 | backend | `npm run seed -- --demo 60` | Upserts categories and the login user, adds 60 fake transactions |
 | backend | `npm run dev` | API with reload |
-| backend | `npm test` | 36 unit and integration tests (in-memory MongoDB, Hugging Face faked) |
+| backend | `npm test` | 36 unit and integration tests (in-memory MongoDB, AI provider faked) |
 | backend | `npm run explain -- 5000` | Index scan against collection scan on 5,000 documents |
 | backend | `npm run build` | Type-checks and compiles to `dist/` |
 | frontend | `npm run build` | Type-checks and builds to `dist/` |

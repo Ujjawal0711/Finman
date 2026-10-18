@@ -1,5 +1,5 @@
 // End-to-end API tests against a throwaway MongoDB replica set (transactions need one).
-// Hugging Face is faked by intercepting fetch, so these tests never spend inference credits.
+// The AI provider is faked by intercepting fetch, so these tests never call a real model.
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
@@ -10,8 +10,11 @@ const rs = await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine:
 Object.assign(process.env, {
   MONGODB_URI: rs.getUri(),
   MONGODB_DB: 'finman_test',
-  HF_TOKEN: 'hf_test_token',
-  HF_MODEL: 'test/text-model',
+  // set explicitly so values from backend/.env can never point the tests at a real provider
+  AI_BASE_URL: 'https://ai.test.invalid/v1',
+  AI_API_KEY: 'test-key',
+  AI_MODEL: 'test/text-model',
+  AI_VISION_MODEL: 'test/vision-model',
   JWT_SECRET: 'test-secret-that-is-at-least-32-characters-long',
   ADMIN_EMAIL: 'tester@finman.local',
   ADMIN_PASSWORD: 'test-password-123',
@@ -26,13 +29,13 @@ const { ParseLog } = await import('../models/ParseLog.js');
 const { User } = await import('../models/User.js');
 const { hashPassword } = await import('../services/auth.js');
 
-// ---- fake Hugging Face ----
+// ---- fake AI provider ----
 type HfMode = { kind: 'json'; body: unknown } | { kind: 'text'; body: string } | { kind: 'status'; status: number };
 let hf: HfMode = { kind: 'status', status: 500 };
 let hfCalls = 0;
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (input, init) => {
-  if (!String(input).startsWith('https://router.huggingface.co')) return realFetch(input, init);
+  if (!String(input).startsWith('https://ai.test.invalid')) return realFetch(input, init);
   hfCalls++;
   if (hf.kind === 'status') return new Response('{}', { status: hf.status });
   const content = hf.kind === 'json' ? JSON.stringify(hf.body) : hf.body;
@@ -301,7 +304,7 @@ describe('AI parser', () => {
     hf = { kind: 'status', status: 401 };
     const r = await call('POST', '/parse', { text: sms });
     assert.equal(r.status, 200);
-    assert.equal(r.body.warnings[0], 'Hugging Face rejected the token');
+    assert.equal(r.body.warnings[0], 'The AI provider rejected the API key');
   });
 
   test('OTP messages are recognised as not a transaction', async () => {
