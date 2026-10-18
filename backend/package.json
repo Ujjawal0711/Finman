@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "predev": "node -e \"require('fs').existsSync('node_modules')||require('child_process').execSync('npm install',{stdio:'inherit'})\"",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
@@ -37,7 +38,11 @@
   },
   "config": {
     "mongodbMemoryServer": {
-      "version": "8.2.6"
+      "version": "8.2.6",
+      "downloadDir": ".mongodb-binaries"
     }
+  },
+  "engines": {
+    "node": ">=20.19"
   }
 }

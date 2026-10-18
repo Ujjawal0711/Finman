@@ -4,7 +4,8 @@ try { process.loadEnvFile(); } catch { /* no .env in production; the host inject
 
 const raw = z.object({
   PORT: z.coerce.number().default(4000),
-  MONGODB_URI: z.string().startsWith('mongodb'),
+  // a mongodb:// or mongodb+srv:// connection string, or "local" for the built-in database (see config/db.ts)
+  MONGODB_URI: z.string().refine((v) => v === 'local' || v.startsWith('mongodb'), 'MONGODB_URI must be a mongodb:// URI or "local"'),
   MONGODB_DB: z.string().default('finman'),
   // Any OpenAI-compatible chat API: Groq, Hugging Face's router, OpenRouter, a local Ollama...
   AI_BASE_URL: z.string().url().default('https://router.huggingface.co/v1'),

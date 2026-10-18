@@ -4,3 +4,5 @@ dist/
 *.log
 .localdb/
 ~$*
+.finman-data/
+.mongodb-binaries/
