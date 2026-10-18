@@ -58,6 +58,7 @@ function buildMessages(input: string, categories: string[], today: string): Mess
 
 const HF_URL = 'https://router.huggingface.co/v1/chat/completions';
 const HF_ERRORS: Record<number, string> = {
+  400: 'The AI model in HF_MODEL is not available on Hugging Face. Pick another model in backend/.env',
   401: 'Hugging Face rejected the token',
   402: 'Hugging Face credits are used up',
   429: 'Hugging Face rate limit hit, try again in a minute',
